@@ -13,6 +13,18 @@ class Settings(BaseSettings):
     # Ollama
     OLLAMA_API_URL: str = "http://localhost:11434/api/generate"
     
+    # Authentication
+    AUTHENTICATION_API_KEY: Optional[str] = None
+    
+    # Database
+    DATABASE_ENABLED: bool = True
+    DATABASE_PROVIDER: str = "postgresql"
+    DATABASE_CONNECTION_URI: Optional[str] = None
+    
+    # Cache
+    CACHE_REDIS_ENABLED: bool = True
+    CACHE_REDIS_URI: Optional[str] = None
+    
     class Config:
         case_sensitive = True
         env_file = ".env"
