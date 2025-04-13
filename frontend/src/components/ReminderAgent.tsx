@@ -17,7 +17,7 @@ export default function ReminderAgent() {
     setResponse('')
 
     try {
-      const res = await fetch('/api/reminder', {
+      const res = await fetch('http://localhost:8001/api/v1/reminder', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: message }),
