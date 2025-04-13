@@ -11,12 +11,14 @@ except Exception as e:
     # Create a dummy client for development
     supabase = None
 
+# Create SQLAlchemy engine and session
+engine = create_engine("sqlite:///./app.db")
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
 def get_supabase_client() -> Client:
-    # Create client with minimal configuration
-    return create_client(
-        supabase_url=settings.SUPABASE_URL,
-        supabase_key=settings.SUPABASE_KEY
-    )
+    # Create client with the older version of the Supabase client
+    return create_client(settings.SUPABASE_URL, settings.SUPABASE_KEY)
 
 supabase = get_supabase_client() 
 
