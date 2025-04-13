@@ -1,0 +1,30 @@
+# Dependências principais
+fastapi==0.110.0
+uvicorn==0.27.1
+pydantic==2.6.3
+pydantic-settings==2.2.1
+python-dotenv==1.0.1
+supabase==2.3.4
+email-validator==2.1.0.post1
+
+# Dependências para integração com IA
+ollama==0.1.6
+chromadb==0.4.24
+
+# Dependências para processamento de dados
+pandas==2.2.1
+numpy==1.26.4
+
+# Dependências para testes
+pytest==8.0.2
+pytest-asyncio==0.23.5
+
+# Dependências para desenvolvimento
+black==24.2.0
+isort==5.13.2
+flake8==7.0.0 
+
+# Dependências para banco de dados  
+SQLAlchemy==2.0.40
+psycopg2-binary==2.9.9
+
