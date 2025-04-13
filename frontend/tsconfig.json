@@ -1,5 +1,8 @@
 {
   "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"]},
     "target": "es6",
     "module": "esnext",
     "jsx": "preserve",
@@ -27,3 +30,4 @@
     "node_modules"
   ]
 }
+
