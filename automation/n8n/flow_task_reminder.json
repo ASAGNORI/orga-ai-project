@@ -1,0 +1,37 @@
+{
+  "name": "Task Reminder Flow",
+  "nodes": [
+    {
+      "parameters": {
+        "functionCode": "return items.filter(item => new Date(item.json.due_date) <= new Date()).map(item => ({ json: item.json }));"
+      },
+      "name": "Check Due Tasks",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "fromEmail": "no-reply@orga.ai",
+        "toEmail": "={{$json.email}}",
+        "subject": "Você tem tarefas pendentes",
+        "text": "Olá, você tem tarefas vencendo hoje. Hora de focar!"
+      },
+      "name": "Send Email Reminder",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1
+    }
+  ],
+  "connections": {
+    "Check Due Tasks": {
+      "main": [
+        [
+          {
+            "node": "Send Email Reminder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

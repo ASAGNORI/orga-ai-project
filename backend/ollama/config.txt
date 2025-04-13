@@ -1,0 +1,6 @@
+# Modelo recomendado para uso local com IA
+modelo=llama3
+parametros:
+  temperatura: 0.7
+  max_tokens: 1024
+  endpoint: http://localhost:11434/api/generate
