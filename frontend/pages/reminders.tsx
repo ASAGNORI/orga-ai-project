@@ -2,7 +2,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { addReminder, getReminders } from '@/services/supabase'
+import { addReminderWithLLama, getReminders } from '@/services/supabase'
 
 export default function RemindersPage() {
   const [message, setMessage] = useState('')
@@ -10,7 +10,7 @@ export default function RemindersPage() {
 
   const fetchData = async () => {
     const data = await getReminders()
-    setReminders(data)
+    setReminders(data || [])
   }
 
   useEffect(() => {
@@ -18,7 +18,7 @@ export default function RemindersPage() {
   }, [])
 
   const handleSubmit = async () => {
-    await addReminder(message)
+    await addReminderWithLLama(message)
     setMessage('')
     fetchData()
   }

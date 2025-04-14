@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from api.routes import reminder
+from api.routes import reminder, ollama, history
 from app.core.config import settings
 
 app = FastAPI(
@@ -11,7 +11,7 @@ app = FastAPI(
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001"],  # Frontend Next.js
+    allow_origins=["http://localhost:3000", "http://localhost:3001", "http://localhost:3002"],  # Frontend Next.js
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -19,6 +19,8 @@ app.add_middleware(
 
 # Include routers
 app.include_router(reminder.router, prefix=settings.API_V1_STR)
+app.include_router(ollama.router, prefix=settings.API_V1_STR)
+app.include_router(history.router, prefix=settings.API_V1_STR)
 
 @app.get("/")
 async def root():

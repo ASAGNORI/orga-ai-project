@@ -9,7 +9,7 @@ export const supabase = createClient(supabaseUrl, supabaseKey)
 export const addReminderWithLLama = async (inputText: string) => {
   try {
     // 1. Envia o texto para a API do OLLAMA
-    const response = await fetch(process.env.NEXT_PUBLIC_OLLAMA_API_URL, {
+    const response = await fetch(process.env.NEXT_PUBLIC_OLLAMA_API_URL || '', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

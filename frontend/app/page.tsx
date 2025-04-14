@@ -1,7 +1,11 @@
+import ChatPanel from '@/components/ChatPanel'
+
 export default function Home() {
   return (
-    <main className="p-4">
-      <h1 className="text-2xl font-bold">Bem-vindo à Orga AI!</h1>
+    <main className="min-h-screen bg-gray-50 py-8">
+      <div className="container mx-auto px-4">
+        <ChatPanel />
+      </div>
     </main>
-  );
+  )
 }

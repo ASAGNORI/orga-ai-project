@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     # Supabase
     SUPABASE_URL: str = "http://127.0.0.1:54321"
     SUPABASE_KEY: str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0"
+    SUPABASE_SERVICE_KEY: Optional[str] = None
     
     # Ollama
     OLLAMA_API_URL: str = "http://localhost:11434/api/generate"
@@ -28,5 +29,6 @@ class Settings(BaseSettings):
     class Config:
         case_sensitive = True
         env_file = ".env"
+        extra = "allow"  # Permite campos extras
 
 settings = Settings() 
