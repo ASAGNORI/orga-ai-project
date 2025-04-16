@@ -1,7 +1,8 @@
 from supabase import create_client, Client
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
-from .config import settings
+from .config import settings 
+from app.core.config import settings
 
 # Initialize Supabase client with the simplest possible approach
 try:
@@ -17,7 +18,6 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 def get_supabase_client() -> Client:
-    # Create client with the older version of the Supabase client
     return create_client(settings.SUPABASE_URL, settings.SUPABASE_KEY)
 
 supabase = get_supabase_client() 
