@@ -1,0 +1,427 @@
+# // Cosidere usar sempre docker compose -f docker-compose.yaml -p oraga_ai_projetc up -d --build
+
+services:
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    env_file:
+      - ../backend/.env
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=30
+      - REFRESH_TOKEN_EXPIRE_DAYS=7
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - CORS_ORIGINS=${CORS_ORIGINS}
+      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - SMTP_TLS=${SMTP_TLS:-true}
+      - SMTP_SSL=${SMTP_SSL:-false}
+      - N8N_API_URL=${N8N_API_URL}
+      - N8N_API_KEY=${N8N_API_KEY}
+      - OLLAMA_API_URL=${OLLAMA_API_URL}
+      - EVOLUTION_API_URL=${EVOLUTION_API_URL}
+    volumes:
+      - backend_data:/app:ro
+    networks:
+      - backend_network
+      - supabase_network
+    depends_on:
+      supabase:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/run
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    env_file:
+      - ../frontend/.env
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+    volumes:
+      - frontend_data:/app:ro
+      - frontend_node_modules:/app/node_modules
+    networks:
+      - backend_network
+    depends_on:
+      - backend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+
+  supabase:
+    image: supabase/postgres:15.1.0.147
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB:-postgres}
+      - JWT_SECRET=${JWT_SECRET}
+      - ANON_KEY=${SUPABASE_ANON_KEY}
+      - SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+    volumes:
+      - supabase_data:/var/lib/postgresql/data
+    networks:
+      - supabase_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+    security_opt:
+      - no-new-privileges:true
+
+  studio:
+    image: supabase/studio:20240326-5e5586d
+    ports:
+      - "127.0.0.1:54323:3000"
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - STUDIO_PG_META_URL=http://meta:8080
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - DEFAULT_ORGANIZATION=${DEFAULT_ORGANIZATION:-Default Organization}
+      - DEFAULT_PROJECT=${DEFAULT_PROJECT:-Default Project}
+    networks:
+      - supabase_network
+    depends_on:
+      supabase:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+
+  auth:
+    image: supabase/gotrue:v2.143.0
+    environment:
+      - GOTRUE_API_HOST=0.0.0.0
+      - GOTRUE_API_PORT=9999
+      - API_EXTERNAL_URL=${API_EXTERNAL_URL}
+      - GOTRUE_DB_DRIVER=postgres
+      - GOTRUE_DB_HOST=supabase
+      - GOTRUE_DB_PORT=5432
+      - GOTRUE_DB_NAME=${POSTGRES_DB:-postgres}
+      - GOTRUE_DB_USER=${POSTGRES_USER:-postgres}
+      - GOTRUE_DB_PASSWORD=${POSTGRES_PASSWORD}
+      - GOTRUE_JWT_SECRET=${JWT_SECRET}
+      - GOTRUE_JWT_EXP=3600
+      - GOTRUE_JWT_DEFAULT_GROUP_NAME=authenticated
+      - GOTRUE_SITE_URL=${SITE_URL}
+      - GOTRUE_MAILER_AUTOCONFIRM=${MAILER_AUTOCONFIRM:-false}
+      - GOTRUE_SMS_AUTOCONFIRM=${SMS_AUTOCONFIRM:-false}
+      - GOTRUE_SMS_PROVIDER=${SMS_PROVIDER:-twilio}
+      - GOTRUE_SMS_TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
+      - GOTRUE_SMS_TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
+      - GOTRUE_SMS_TWILIO_MESSAGE_SERVICE_SID=${TWILIO_MESSAGE_SERVICE_SID}
+    networks:
+      - supabase_network
+    depends_on:
+      supabase:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9999/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+
+  rest:
+    image: postgrest/postgrest:v12.0.1
+    environment:
+      - PGRST_DB_URI=postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@supabase:5432/${POSTGRES_DB:-postgres}
+      - PGRST_DB_SCHEMA=public,storage
+      - PGRST_DB_ANON_ROLE=anon
+      - PGRST_JWT_SECRET=${JWT_SECRET}
+      - PGRST_DB_USE_LEGACY_GUCS=false
+    networks:
+      - supabase_network
+    depends_on:
+      supabase:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+
+  realtime:
+    image: supabase/realtime:v2.27.5
+    environment:
+      - DB_HOST=supabase
+      - DB_PORT=5432
+      - DB_NAME=${POSTGRES_DB:-postgres}
+      - DB_USER=${POSTGRES_USER:-postgres}
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+      - PORT=4000
+      - JWT_SECRET=${JWT_SECRET}
+      - REPLICATION_POLL_INTERVAL=100
+      - SECURE_CHANNELS=true
+    networks:
+      - supabase_network
+    depends_on:
+      supabase:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+
+  storage:
+    image: supabase/storage-api:v0.46.4
+    environment:
+      - ANON_KEY=${SUPABASE_ANON_KEY}
+      - SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - POSTGREST_URL=http://rest:3000
+      - PGRST_JWT_SECRET=${JWT_SECRET}
+      - DATABASE_URL=postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@supabase:5432/${POSTGRES_DB:-postgres}
+      - PGOPTIONS=-c search_path=storage
+      - FILE_SIZE_LIMIT=52428800
+      - STORAGE_BACKEND=file
+      - FILE_STORAGE_BACKEND_PATH=/var/lib/storage
+      - TENANT_ID=default
+      - REGION=us-east-1
+      - GLOBAL_S3_BUCKET=storage
+      - ENABLE_IMAGE_TRANSFORMATION=true
+    volumes:
+      - storage_data:/var/lib/storage
+    networks:
+      - supabase_network
+    depends_on:
+      supabase:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5000/status"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+
+  n8n:
+    image: n8nio/n8n
+    ports:
+      - "127.0.0.1:5678:5678"
+    environment:
+      - N8N_HOST=${N8N_HOST:-localhost}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=${N8N_PROTOCOL:-http}
+      - N8N_USER_MANAGEMENT_DISABLED=${N8N_USER_MANAGEMENT_DISABLED:-false}
+      - N8N_BASIC_AUTH_ACTIVE=${N8N_BASIC_AUTH_ACTIVE:-true}
+      - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER:-admin}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD}
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+      - N8N_EMAIL=${N8N_EMAIL}
+      - N8N_SMTP_HOST=${SMTP_HOST}
+      - N8N_SMTP_PORT=${SMTP_PORT}
+      - N8N_SMTP_USER=${SMTP_USER}
+      - N8N_SMTP_PASS=${SMTP_PASSWORD}
+      - N8N_SMTP_SSL=${SMTP_SSL}
+      - N8N_SMTP_TLS=${SMTP_TLS}
+      - N8N_SMTP_FROM_EMAIL=${N8N_SMTP_FROM_EMAIL:-${N8N_EMAIL}}
+      - N8N_SMTP_FROM_NAME=${N8N_SMTP_FROM_NAME:-n8n}
+      - N8N_SMTP_REPLY_TO=${N8N_SMTP_REPLY_TO:-${N8N_EMAIL}}
+      - N8N_SMTP_REPLY_TO_NAME=${N8N_SMTP_REPLY_TO_NAME:-n8n}
+      - N8N_SMTP_IGNORE_SSL=${N8N_SMTP_IGNORE_SSL:-false}
+      - N8N_SMTP_IGNORE_TLS=${N8N_SMTP_IGNORE_TLS:-false}
+      - N8N_SMTP_IGNORE_CERT=${N8N_SMTP_IGNORE_CERT:-false}
+      - N8N_SMTP_SECURE=${N8N_SMTP_SECURE:-true}
+      - N8N_SMTP_AUTH=${N8N_SMTP_AUTH:-true}
+      - N8N_SMTP_POOL=${N8N_SMTP_POOL:-true}
+      - N8N_SMTP_MAX_CONNECTIONS=${N8N_SMTP_MAX_CONNECTIONS:-5}
+      - N8N_SMTP_MAX_MESSAGES=${N8N_SMTP_MAX_MESSAGES:-100}
+      - N8N_SMTP_RATE_DELTA=${N8N_SMTP_RATE_DELTA:-1000}
+      - N8N_SMTP_RATE_LIMIT=${N8N_SMTP_RATE_LIMIT:-5}
+      - N8N_SMTP_DEBUG=${N8N_SMTP_DEBUG:-false}
+      - N8N_SMTP_LOGGER=${N8N_SMTP_LOGGER:-true}
+      - N8N_SMTP_TRACKED=${N8N_SMTP_TRACKED:-false}
+      - N8N_SMTP_DSN=${N8N_SMTP_DSN}
+      - N8N_SMTP_TIMEOUT=${N8N_SMTP_TIMEOUT:-5000}
+      - N8N_SMTP_GREETING_TIMEOUT=${N8N_SMTP_GREETING_TIMEOUT:-5000}
+      - N8N_SMTP_SOCKET_TIMEOUT=${N8N_SMTP_SOCKET_TIMEOUT:-5000}
+      - N8N_SMTP_CONNECTION_TIMEOUT=${N8N_SMTP_CONNECTION_TIMEOUT:-5000}
+      - N8N_SMTP_SEND_TIMEOUT=${N8N_SMTP_SEND_TIMEOUT:-5000}
+      - N8N_SMTP_MAX_RECIPIENTS=${N8N_SMTP_MAX_RECIPIENTS:-100}
+      - N8N_SMTP_MAX_SIZE=${N8N_SMTP_MAX_SIZE:-10485760}
+      - N8N_SMTP_MAX_MESSAGE_SIZE=${N8N_SMTP_MAX_MESSAGE_SIZE:-10485760}
+      - N8N_SMTP_MAX_ENVELOPE_SIZE=${N8N_SMTP_MAX_ENVELOPE_SIZE:-10485760}
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - supabase_network
+    depends_on:
+      supabase:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5678/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/run
+
+  ollama:
+    image: ollama/ollama
+    ports:
+      - "127.0.0.1:11435:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - backend_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=${USE_GPU:-none}
+      - OLLAMA_MODELS=${OLLAMA_MODELS:-nifty_payne,great_pare}
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/run
+
+networks:
+  backend_network:
+    driver: bridge
+    internal: true
+  supabase_network:
+    driver: bridge
+    internal: true
+
+volumes:
+  backend_data:
+  frontend_data:
+  frontend_node_modules:
+  supabase_data:
+  postgres_data:
+  ollama_data:
+  storage_data:
+  n8n_data: 

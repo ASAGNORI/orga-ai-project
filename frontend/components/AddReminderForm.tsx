@@ -2,10 +2,16 @@
 import { useState } from 'react';
 import { addReminderWithLLama } from '@/services/supabase';
 
+// Definindo o tipo de lembrete
+type Reminder = {
+  message: string;
+  input: string;  // Ou outro tipo, conforme sua lógica
+};
+
 const AddReminderForm = () => {
   const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(false);
-  const [reminder, setReminder] = useState(null);
+  const [reminder, setReminder] = useState<Reminder | null>(null);  // Usando o tipo definido
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();

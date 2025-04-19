@@ -1,0 +1,58 @@
+# ================================
+# Core FastAPI backend
+# ================================
+fastapi==0.110.0
+uvicorn[standard]==0.27.1
+
+# ================================
+# Configurações e validações
+# ================================
+pydantic==2.6.3
+pydantic-settings==2.2.1
+python-dotenv==1.0.1
+email-validator==2.1.0.post1
+
+# ================================
+# Supabase e autenticação
+# ================================
+supabase==2.3.4
+gotrue==1.3.0
+httpx==0.25.2
+requests==2.31.0
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.9
+
+# ================================
+# IA e processamento de dados
+# ================================
+langchain==0.1.12
+langchain-community==0.0.28
+chromadb==0.4.24
+pandas==2.2.1
+numpy==1.26.4
+ollama==0.0.0  # Cliente para usar modelos locais
+
+# ================================
+# Banco de dados
+# ================================
+SQLAlchemy==2.0.40
+psycopg2-binary==2.9.9
+
+# ================================
+# Ferramentas de Dev
+# ================================
+black==24.2.0
+isort==5.13.2
+flake8==7.0.0
+
+# ================================
+# Testes
+# ================================
+pytest==8.0.2
+pytest-asyncio==0.23.5
+
+# ================================
+# Outros
+# ================================
+pydrive==1.3.1  # Para backups no Google Drive

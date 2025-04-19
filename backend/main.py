@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi import APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from api.routes import reminder, ollama, history, task
-from app.core.config import settings
+from app.core.config_instance import settings
 from api.routes import task
 from supabase import create_client
 from pydantic import BaseModel

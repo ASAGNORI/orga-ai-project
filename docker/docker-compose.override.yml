@@ -1,0 +1,40 @@
+# // considere usar sempre docker compose -f docker-compose.yaml -p oraga_ai_projetc up -d --build
+services:
+  frontend:
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NEXT_PUBLIC_SUPABASE_URL=http://localhost:54399
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+  backend:
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../backend:/app/backend
+    environment:
+      - DEBUG=True
+
+  evolutionapi:
+    build:
+      context: ../evolution-api
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    volumes:
+      - ../evolution-api:/app/evolutionapi
+    environment:
+      - DEBUG=True
+
+  supabase:
+    ports:
+      - "54399:54329"
+
+  ollama:
+    ports:
+      - "11434:11434"
+
+  n8n:
+    ports:
+      - "5678:5678"
