@@ -15,8 +15,8 @@ class Settings(BaseSettings):
     SUPABASE_URL: str
     SUPABASE_ANON_KEY: str
     SUPABASE_SERVICE_ROLE_KEY: Optional[str] = None
-    SUPABASE_DB_URL: str
-    SUPABASE_JWT_SECRET: str
+    SUPABASE_DB_URL: Optional[str] = None
+    SUPABASE_JWT_SECRET: Optional[str] = None
     
     # Database
     DATABASE_URL: str
@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     # CORS
     CORS_ORIGINS: List[str] = ["http://localhost:3000"]
     CORS_CREDENTIALS: bool = True
-    ALLOWED_HOSTS: List[str]
+    ALLOWED_HOSTS: List[str] = ["localhost", "127.0.0.1"]
     
     # Ollama
     OLLAMA_API_URL: str = "http://host.docker.internal:11434"
@@ -53,18 +53,18 @@ class Settings(BaseSettings):
     N8N_URL: Optional[str] = None
     
     # HANA
-    HANA_HOST: str
-    HANA_PORT: int
-    HANA_USER: str
-    HANA_PASSWORD: str
-    HANA_SCHEMA: str
+    HANA_HOST: Optional[str] = None
+    HANA_PORT: Optional[int] = None
+    HANA_USER: Optional[str] = None
+    HANA_PASSWORD: Optional[str] = None
+    HANA_SCHEMA: Optional[str] = None
     
     # Hugging Face
     HUGGINGFACE_API_KEY: Optional[str] = None
     
     class Config:
         case_sensitive = True
-        env_file = ".env"
+        env_file = os.getenv("ENV_FILE", ".env")
         env_file_encoding = "utf-8"
         extra = "allow"
     

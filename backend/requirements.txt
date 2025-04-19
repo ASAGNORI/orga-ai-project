@@ -44,6 +44,7 @@ sentence-transformers==2.2.2
 SQLAlchemy==2.0.40
 psycopg2-binary==2.9.9
 hdbcli==2.24.24  # SAP HANA Python driver (versão mais recente compatível)
+tenacity==8.2.3  # For database connection retries
 
 # ================================
 # Ferramentas de Dev

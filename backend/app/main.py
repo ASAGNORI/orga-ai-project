@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes import tasks, ai
-from app.core.database import Base, engine
+from app.core.database import Base, create_db_engine, initialize_supabase
 from .core.config import settings
 
 app = FastAPI(
@@ -19,8 +19,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Create database tables
+# Create database engine and initialize Supabase
+engine = create_db_engine()
 Base.metadata.create_all(bind=engine)
+initialize_supabase()
 
 # Routers
 app.include_router(tasks.router, prefix="/api/v1/tasks")

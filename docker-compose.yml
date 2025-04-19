@@ -21,7 +21,12 @@ services:
     depends_on:
       backend:
         condition: service_healthy
-    command: npm run dev
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: sh -c "until curl -f http://backend:8000/api/v1/health; do echo 'Waiting for backend...'; sleep 2; done && npm run dev"
 
   backend:
     build:

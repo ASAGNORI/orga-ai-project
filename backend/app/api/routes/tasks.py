@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from typing import List
 from ...models.task import Task, TaskCreate, TaskStatus
-from ...core.database import supabase
+from ...core.database import get_supabase
 import logging
 
 logger = logging.getLogger(__name__)
@@ -14,6 +14,7 @@ async def create_task(task: TaskCreate):
         if task.status not in TaskStatus:
             raise HTTPException(status_code=400, detail="Invalid task status")
             
+        supabase = get_supabase()
         result = supabase.table("tasks").insert(task.dict()).execute()
         if not result.data:
             raise HTTPException(status_code=500, detail="Failed to create task")
@@ -25,6 +26,7 @@ async def create_task(task: TaskCreate):
 @router.get("/", response_model=List[Task])
 async def get_tasks(user_id: str):
     try:
+        supabase = get_supabase()
         result = supabase.table("tasks").select("*").eq("user_id", user_id).execute()
         if not result.data:
             return []
@@ -40,6 +42,7 @@ async def update_task(task_id: str, task: TaskCreate):
         if task.status not in TaskStatus:
             raise HTTPException(status_code=400, detail="Invalid task status")
             
+        supabase = get_supabase()
         result = supabase.table("tasks").update(task.dict()).eq("id", task_id).execute()
         if not result.data:
             raise HTTPException(status_code=404, detail="Task not found")
@@ -51,6 +54,7 @@ async def update_task(task_id: str, task: TaskCreate):
 @router.delete("/{task_id}")
 async def delete_task(task_id: str):
     try:
+        supabase = get_supabase()
         result = supabase.table("tasks").delete().eq("id", task_id).execute()
         if not result.data:
             raise HTTPException(status_code=404, detail="Task not found")

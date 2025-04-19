@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from app.core.supabase import supabase
+from app.core.database import get_supabase
 import logging
 
 # Configurar logging
@@ -12,6 +12,7 @@ router = APIRouter()
 async def get_history():
     try:
         logger.info("Buscando histórico de mensagens...")
+        supabase = get_supabase()
         response = supabase.table("messages").select("*").order("created_at", desc=True).limit(20).execute()
         logger.info(f"Dados recebidos do Supabase: {response.data}")
         

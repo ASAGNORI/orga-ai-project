@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 import requests
-from app.core.supabase import supabase
+from app.core.database import get_supabase
 from datetime import datetime
 import logging
 import traceback
@@ -33,6 +33,7 @@ async def generate_response(msg: Message):
 
         # Salvar no Supabase
         try:
+            supabase = get_supabase()
             supabase.table("messages").insert({
                 "input": msg.input,
                 "response": data["response"],
@@ -81,6 +82,7 @@ async def chat_endpoint(msg: Message):
         
         # Salvar no Supabase
         try:
+            supabase = get_supabase()
             supabase.table("messages").insert({
                 "input": msg.input,
                 "response": data["response"],
