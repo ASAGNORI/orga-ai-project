@@ -1,15 +1,48 @@
-import Link from "next/link";
+'use client';
 
-export default function HomePage() {
+import { useEffect, useState } from 'react';
+import { checkHealth } from '@/lib/api';
+
+interface HealthStatus {
+  status: string;
+}
+
+export default function Home() {
+  const [status, setStatus] = useState<string>('Loading...');
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const checkBackendStatus = async () => {
+      try {
+        const result = await checkHealth() as HealthStatus;
+        setStatus(result.status);
+        setError(null);
+      } catch (err) {
+        setError('Failed to connect to backend');
+        console.error('Error:', err);
+      }
+    };
+
+    checkBackendStatus();
+  }, []);
+
   return (
-    <div className="text-center mt-20">
-      <h1 className="text-3xl font-bold mb-4">Bem-vindo ao ORGA.AI</h1>
-      <p className="text-gray-600 mb-6">Organize sua vida com agentes inteligentes</p>
-      <Link href="/chat">
-        <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-          Ir para o Chat
-        </button>
-      </Link>
-    </div>
-  )
+    <main className="flex min-h-screen flex-col items-center justify-between p-24 bg-gray-100">
+      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
+        <div className="w-full">
+          <h1 className="text-4xl font-bold mb-8 text-center">Orga.AI</h1>
+          <div className="bg-white rounded-lg p-6 shadow-lg">
+            <h2 className="text-2xl font-semibold mb-4 text-center">Backend Status</h2>
+            <div className="text-center">
+              {error ? (
+                <p className="text-red-500 font-medium">{error}</p>
+              ) : (
+                <p className="text-green-500 font-medium">Status: {status}</p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
 }

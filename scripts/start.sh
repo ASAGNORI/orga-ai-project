@@ -1,27 +1,21 @@
 #!/bin/bash
 
-# Ativa erro fatal se algo falhar
+# Exit on error
 set -e
 
 # Defaults
-CHECK_OLLAMA=true
 START_SUPABASE=true
 START_BACKEND=true
 START_FRONTEND=true
 USE_DOCKER=true
 
-# Parse de argumentos
+# Parse arguments
 for arg in "$@"
 do
   case $arg in
-    --no-check)
-      CHECK_OLLAMA=false
-      shift
-      ;;
     --frontend-only)
       START_BACKEND=false
       START_SUPABASE=false
-      CHECK_OLLAMA=false
       shift
       ;;
     --backend-only)
@@ -38,14 +32,13 @@ do
       ;;
     --help)
       echo ""
-      echo "✨ Script de inicialização do Orga AI"
+      echo "✨ Orga AI Project Startup Script"
       echo ""
-      echo "Opções:"
-      echo "  --no-check         Ignora checagem do Ollama"
-      echo "  --frontend-only    Inicia apenas o frontend"
-      echo "  --backend-only     Inicia apenas o backend e supabase"
-      echo "  --no-supabase      Pula reinício do Supabase"
-      echo "  --no-docker        Roda os serviços fora do Docker"
+      echo "Options:"
+      echo "  --frontend-only    Start only the frontend"
+      echo "  --backend-only     Start only the backend and supabase"
+      echo "  --no-supabase      Skip Supabase startup"
+      echo "  --no-docker        Run services without Docker"
       echo ""
       exit 0
       ;;
@@ -53,70 +46,62 @@ do
 done
 
 echo ""
-echo "🚀 Iniciando o projeto Orga AI (modo Docker)..."
-echo "==============================================="
+echo "🚀 Starting Orga AI Project..."
+echo "============================="
 
-# 1. Checagem do Ollama
-if [ "$CHECK_OLLAMA" = true ]; then
-  echo ""
-  echo "🧠 Verificando status do Ollama..."
-  if ollama list >/dev/null 2>&1; then
-      echo "✅ Ollama está rodando!"
-  else
-      echo "❌ Ollama não está rodando. Por favor, inicie com: ollama serve"
-      exit 1
-  fi
+# Check for required environment variables
+if [ ! -f .env ]; then
+    echo "❌ .env file not found. Please create one from .env.example"
+    exit 1
 fi
 
-# 1.5. Detectar se GPU está disponível e gerar override se necessário
-GPU_AVAILABLE=false
-
-if command -v nvidia-smi &> /dev/null; then
-  if nvidia-smi -L | grep -q "GPU"; then
-    GPU_AVAILABLE=true
-    echo "💪 GPU disponível! Vamos usar runtime: nvidia com Docker."
-
-    cat > docker/docker-compose.override.yml <<EOL
-services:
-  ollama:
-    environment:
-      - NVIDIA_VISIBLE_DEVICES=all
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
-EOL
-
-  else
-    echo "⚠️ nvidia-smi está disponível, mas nenhuma GPU foi detectada."
-  fi
-else
-  echo "🧊 Sem suporte a nvidia-smi. Rodando em CPU mesmo."
+# Check for required API keys
+if [ -z "$HUGGINGFACE_API_KEY" ]; then
+    echo "⚠️ HUGGINGFACE_API_KEY not set in .env"
 fi
 
-# 2. Supabase
-if [ "$START_SUPABASE" = true ]; then
-  echo ""
-  echo "🗃️ Supabase é gerenciado via Docker. Nenhuma ação do CLI necessária aqui."
+if [ -z "$HANA_HOST" ] || [ -z "$HANA_USER" ] || [ -z "$HANA_PASSWORD" ]; then
+    echo "⚠️ HANA database credentials not fully configured in .env"
 fi
 
-# 3. Iniciar serviços com Docker Compose
+# Start services with Docker Compose
 if [ "$USE_DOCKER" = true ]; then
-  echo ""
-  echo "📦 Iniciando todos os serviços (Docker)..."
+    echo ""
+    echo "📦 Starting services with Docker Compose..."
 
-  if [ -f docker/docker-compose.override.yml ]; then
-    docker compose -f docker/docker-compose.yaml -f docker/docker-compose.override.yml -p orga_ai_project up -d --build
-  else
-    docker compose -f docker/docker-compose.yaml -p orga_ai_project up -d --build
-  fi
+    # Build and start services
+    docker compose up -d --build
+
+    # Check if services are running
+    echo ""
+    echo "🔍 Checking service status..."
+    
+    if docker compose ps | grep -q "frontend.*Up"; then
+        echo "✅ Frontend is running at http://localhost:3000"
+    fi
+    
+    if docker compose ps | grep -q "backend.*Up"; then
+        echo "✅ Backend is running at http://localhost:8000"
+    fi
+    
+    if docker compose ps | grep -q "supabase.*Up"; then
+        echo "✅ Supabase is running at http://localhost:54321"
+    fi
+    
+    if docker compose ps | grep -q "n8n.*Up"; then
+        echo "✅ N8N is running at http://localhost:5678"
+    fi
 else
-  echo ""
-  echo "⚙️ Modo sem Docker ainda não implementado neste script."
+    echo ""
+    echo "⚙️ Non-Docker mode not implemented yet"
+    exit 1
 fi
 
 echo ""
-echo "✅ Projeto Orga AI rodando! Voa, foguete! 🚀🔥"
+echo "✅ Orga AI Project is running! 🚀"
+echo ""
+echo "📚 Documentation:"
+echo "  - Frontend: http://localhost:3000"
+echo "  - Backend API: http://localhost:8000/docs"
+echo "  - Supabase Studio: http://localhost:54321"
+echo "  - N8N Dashboard: http://localhost:5678"

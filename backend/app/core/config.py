@@ -31,12 +31,14 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     
     # CORS
-    CORS_ORIGINS: List[str]
+    CORS_ORIGINS: List[str] = ["http://localhost:3000"]
+    CORS_CREDENTIALS: bool = True
     ALLOWED_HOSTS: List[str]
     
     # Ollama
-    OLLAMA_API_URL: str
+    OLLAMA_API_URL: str = "http://host.docker.internal:11434"
     OLLAMA_API_KEY: Optional[str] = None
+    OLLAMA_MODEL: str = "llama3"
     
     # Email
     SMTP_HOST: Optional[str] = None
@@ -50,6 +52,16 @@ class Settings(BaseSettings):
     N8N_API_KEY: Optional[str] = None
     N8N_URL: Optional[str] = None
     
+    # HANA
+    HANA_HOST: str
+    HANA_PORT: int
+    HANA_USER: str
+    HANA_PASSWORD: str
+    HANA_SCHEMA: str
+    
+    # Hugging Face
+    HUGGINGFACE_API_KEY: Optional[str] = None
+    
     class Config:
         case_sensitive = True
         env_file = ".env"
@@ -58,3 +70,6 @@ class Settings(BaseSettings):
     
     def get_current_user(self) -> Callable:
         return None
+
+# Create an instance of Settings
+settings = Settings()
