@@ -1,7 +1,7 @@
 import os
 import logging
 from sqlalchemy import text, create_engine
-from dotenv import load_dotenv
+from dotenv import load_dotenv, dotenv_values
 
 # Configuração do logging
 logging.basicConfig(
@@ -10,21 +10,18 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Carrega as variáveis de ambiente
-env_file = os.getenv("ENV_FILE", ".env.local")
-load_dotenv(env_file)
+# Carrega as variáveis de ambiente diretamente do arquivo .env
+env_file = os.getenv("ENV_FILE", ".env")
+config = dotenv_values(env_file)
 
 def get_database_url():
     """
-    Obtém a URL do banco de dados do ambiente.
+    Obtém a URL do banco de dados do arquivo .env
     """
-    host = "localhost"
-    port = os.getenv("POSTGRES_PORT", "54322")
-    user = os.getenv("POSTGRES_USER", "postgres")
-    password = os.getenv("POSTGRES_PASSWORD", "postgres")
-    database = os.getenv("POSTGRES_DB", "postgres")
-    
-    return f"postgresql://{user}:{password}@{host}:{port}/{database}"
+    # Usar a URL do banco de dados definida no .env
+    database_url = config.get("DATABASE_URL", "postgresql://postgres:postgres@localhost:54322/postgres")
+    logger.info(f"Using database URL: {database_url}")
+    return database_url
 
 def check_table_exists(engine, table_name: str) -> bool:
     """

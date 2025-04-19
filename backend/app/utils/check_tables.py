@@ -11,7 +11,26 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Carrega as variáveis de ambiente
-load_dotenv()
+env_file = os.getenv("ENV_FILE", ".env")
+load_dotenv(env_file)
+
+def get_database_url():
+    """
+    Obtém a URL do banco de dados do ambiente.
+    """
+    # Tenta obter a URL diretamente do ambiente
+    database_url = os.getenv("DATABASE_URL")
+    if database_url:
+        return database_url
+    
+    # Se não estiver definida, constrói a URL
+    host = "localhost"
+    port = os.getenv("POSTGRES_PORT", "54322")
+    user = os.getenv("POSTGRES_USER", "postgres")
+    password = os.getenv("POSTGRES_PASSWORD", "postgres")
+    database = os.getenv("POSTGRES_DB", "postgres")
+    
+    return f"postgresql://{user}:{password}@{host}:{port}/{database}"
 
 def check_table_exists(engine, table_name: str) -> bool:
     """
@@ -63,11 +82,12 @@ def main():
     Função principal que executa a verificação das tabelas.
     """
     try:
-        # Cria engine do SQLAlchemy
-        database_url = os.getenv("DATABASE_URL")
-        if not database_url:
-            raise ValueError("DATABASE_URL não está definida nas variáveis de ambiente")
-            
+        # Obtém a URL do banco de dados
+        database_url = get_database_url()
+        
+        logger.info(f"Arquivo de ambiente: {env_file}")
+        logger.info(f"Conectando ao banco de dados: {database_url}")
+        
         engine = create_engine(database_url)
         
         # Lista de tabelas para verificar

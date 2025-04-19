@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes import tasks, ai
-from app.core.database import Base, create_db_engine, initialize_supabase
+from app.core.database import Base, get_engine, initialize_supabase
+from app.core.models import User, Task, Goal, MindMap, Message
 from .core.config import settings
 
 app = FastAPI(
@@ -20,8 +21,12 @@ app.add_middleware(
 )
 
 # Create database engine and initialize Supabase
-engine = create_db_engine()
+engine = get_engine()
+
+# Create all tables
 Base.metadata.create_all(bind=engine)
+
+# Initialize Supabase client
 initialize_supabase()
 
 # Routers

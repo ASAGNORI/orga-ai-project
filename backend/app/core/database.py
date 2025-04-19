@@ -14,6 +14,30 @@ logger = logging.getLogger(__name__)
 # Initialize Base
 Base = declarative_base()
 
+# Import models after Base is defined
+from .models import User, Task, Goal, MindMap, Message
+
+# Initialize Supabase client
+_supabase_client: Optional[Client] = None
+
+# Initialize engine and session factory
+_engine = None
+_SessionLocal = None
+
+def get_engine():
+    """Get or create SQLAlchemy engine."""
+    global _engine
+    if _engine is None:
+        _engine = create_db_engine()
+    return _engine
+
+def get_session_factory():
+    """Get or create session factory."""
+    global _SessionLocal
+    if _SessionLocal is None:
+        _SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=get_engine())
+    return _SessionLocal
+
 def create_db_engine():
     """Create a SQLAlchemy engine based on environment."""
     try:
@@ -69,7 +93,7 @@ def get_supabase_client() -> Client:
 def test_db_connection():
     """Test database connection."""
     try:
-        db = SessionLocal()
+        db = get_db()
         db.execute("SELECT 1")
         logger.info("Successfully connected to the database")
         return True
@@ -79,17 +103,9 @@ def test_db_connection():
     finally:
         db.close()
 
-# Create engine instance
-engine = create_db_engine()
-
-# Create session factory
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Initialize Supabase client
-_supabase_client: Optional[Client] = None
-
 def get_db() -> Generator[Session, None, None]:
     """Get database session."""
+    SessionLocal = get_session_factory()
     db = SessionLocal()
     try:
         yield db
