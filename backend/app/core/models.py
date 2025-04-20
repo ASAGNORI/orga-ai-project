@@ -73,7 +73,7 @@ class Message(Base):
     type = Column(String)  # user, assistant, system, error
     user_id = Column(String, ForeignKey("users.id"))
     task_id = Column(String, ForeignKey("tasks.id"), nullable=True)
-    metadata = Column(JSON)
+    meta_info = Column(JSON)
     status = Column(String, default="pending")  # pending, delivered, read, failed
     parent_id = Column(String, ForeignKey("messages.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
